@@ -4,6 +4,15 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+# --- helpers ---
+trim() {
+  # trim leading/trailing whitespace from $1
+  local s=$1
+  s="${s#"${s%%[![:space:]]*}"}"
+  s="${s%"${s##*[![:space:]]}"}"
+  printf "%s" "$s"
+}
+
 # --- get Student ID and output file ---
 read -rp "Enter your Student ID (e.g., S298900): " student_id_raw
 student_id="$(trim "$student_id_raw")"
