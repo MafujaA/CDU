@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# TASK-02: Raffle Draw dataset maker
+# TASK-02 (Bash Scripting – 2): Raffle Draw dataset maker
 
 set -euo pipefail
 IFS=$'\n\t'
 
 # --- get Student ID and output file ---
-read -rp "Enter your Student ID (e.g., S298900): " student_id
-student_id="${student_id// /}"                    # strip spaces
+read -rp "Enter your Student ID (e.g., S298900): " student_id_raw
+student_id="$(trim "$student_id_raw")"
+student_id="${student_id// /}"          # remove any spaces inside too
 outfile="${student_id}.txt"
 
 # start fresh file
@@ -17,10 +18,12 @@ echo "Welcome to the Raffle Draw Program."
 # --- number of applicants 1..20 ---
 num_people=""
 while :; do
-  read -rp "Enter the number of People participating: " num_people
-  # ensure it is an integer
+  read -rp "Enter the number of People participating: " num_people_raw
+  num_people="$(trim "$num_people_raw")"
+
+  # integer check
   if [[ ! "$num_people" =~ ^[0-9]+$ ]]; then
-    echo "Please enter a whole number (1–20), re-enter:"
+    echo "Number of people must be a whole number 1–20 (inclusive), Re-enter:"
     continue
   fi
   if (( num_people < 1 || num_people > 20 )); then
@@ -37,11 +40,9 @@ for ((i=1; i<=num_people; i++)); do
 
   # name: non-empty, <= 30 chars
   while :; do
-    read -rp "Enter Name (max 30 chars): " name
-    # trim leading/trailing spaces for length check (visual parity with screenshot not required)
-    name_trimmed="${name#"${name%%[![:space:]]*}"}"
-    name_trimmed="${name_trimmed%"${name_trimmed##*[![:space:]]}"}"
-    name_len=${#name_trimmed}
+    read -rp "Enter Name (max 30 chars): " name_raw
+    name="$(trim "$name_raw")"
+    name_len=${#name}
     if (( name_len == 0 )); then
       echo "Name cannot be empty - Re-enter (max 30 chars):"
       continue
@@ -50,21 +51,24 @@ for ((i=1; i<=num_people; i++)); do
       echo "Name too Long - Re-enter (max 30 chars):"
       continue
     fi
-    name="$name_trimmed"
     break
   done
 
   # state: anything except "Canberra" (case-insensitive)
   while :; do
-    read -rp "Enter State (note: this program is for people outside 'Canberra'): " state
+    read -rp "Enter State (note: this program is for people outside 'Canberra'): " state_raw
+    state="$(trim "$state_raw")"
     if [[ -z "$state" ]]; then
       echo "State cannot be empty - Re-enter State:"
       continue
     fi
-    if [[ "${state,,}" == "canberra" ]]; then
+    shopt -s nocasematch
+    if [[ "$state" == "canberra" ]]; then
       echo "Canberra is not allowed at this moment - Re-enter State:"
+      shopt -u nocasematch
       continue
     fi
+    shopt -u nocasematch
     break
   done
 
@@ -72,7 +76,7 @@ for ((i=1; i<=num_people; i++)); do
   {
     printf "%s\n" "$name"
     printf "%s\n" "$state"
-    printf "------------\n"
+    printf "%s\n" "------------"
   } >> "$outfile"
 done
 
